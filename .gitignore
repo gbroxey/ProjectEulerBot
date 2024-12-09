@@ -132,9 +132,12 @@ dmypy.json
 discord_key.txt
 session_cookies.txt
 database_key.txt
+databases/authentic.db
+profiles/authentic.json
 
 # output files
 nohup.out
+keys.json
 
 # images output
 images_saves/

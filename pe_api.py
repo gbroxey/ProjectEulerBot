@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 
 import datetime
 import pytz
+import json
+import time
 
 import dbqueries
 
@@ -28,6 +30,7 @@ console = Console()
 
 class ProjectEulerRequest:
 
+
     @staticmethod
     def request_failed():
 
@@ -52,17 +55,16 @@ class ProjectEulerRequest:
         TOTAL_REQUESTS += 1
         SESSION_REQUESTS += 1
         
-        with open(CREDENTIALS_LOCATION, "r") as file:
-            lines = file.readlines()
+        with open("keys.json", "r") as f:
+            keys = json.load(f)
+
+        if need_login:
+            cookies = keys["session_keys"]
+        else:
+            cookies = {}
         
-        # Do some formatting
-        for i in range(2):
-            lines[i] = lines[i].replace("\n", "")
-        
-        # Then store the important credentials
-        phpSessId, keepAlive = lines
-        cookies = {'PHPSESSID': phpSessId, 'keep_alive': keepAlive}
-        
+        # console.log(cookies)
+
         try:
             # Do the request to the website, with the right cookies that emulate the account
             r = requests.get(target_url, cookies=cookies)
@@ -83,9 +85,7 @@ class ProjectEulerRequest:
             ProjectEulerRequest.request_failed()
             self.status = None
             self.response = err
-            
-
-
+        
 
 
 
@@ -156,7 +156,8 @@ class Member:
                  _solve_count: int = None, _level: int = None, _solve_array: list = None, _discord_id: str = None, 
                  _kudo_count: int = None, _kudo_array: list = None, _database_solve_count: int = None, _database_solve_array: int = None, 
                  _award_count: int = None, _award_array: list = None, _database_award_count: int = None, 
-                 _database_award_array: list = None, _database_kudo_count: int = None, _database_kudo_array: int = None):
+                 _database_award_array: list = None, _database_kudo_count: int = None, _database_kudo_array: int = None,
+                 _private: bool = None):
         
         self._username = _username
         self._nickname = _nickname
@@ -179,6 +180,8 @@ class Member:
         self._database_award_array = _database_award_array
         self._database_kudo_count = _database_kudo_count
         self._database_kudo_array = _database_kudo_array
+        
+        self._private = _private
         
     
     def __str__(self):
@@ -235,19 +238,25 @@ class Member:
         
         soup = BeautifulSoup(kudo_page.response, 'html.parser')
 
-        div1 = soup.find(id="problem_solving_awards_section")
-        div2 = soup.find(id="forum_based_awards_section")
+        awards_container = soup.find(id="awards_section").find_all("div", recursive=False)
+
+        div1 = awards_container[0]
+        div2 = awards_container[1]
+        div3 = awards_container[2]
 
         problem_awards = div1.find_all(class_="award_box")
         solves_problem = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in problem_awards]
 
-        forum_awards = div2.find_all(class_="award_box")
-        solves_forum = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in forum_awards]
+        problem_publication = div2.find_all(class_="award_box")
+        solves_publication = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in problem_publication]
         
-        self._pe_award_count = sum(solves_problem) + sum(solves_forum)
+        forum_awards = div3.find_all(class_="award_box")
+        solves_forum = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in forum_awards]
+
+        self._pe_award_count = sum(solves_problem) + sum(solves_publication) + sum(solves_forum)
         self._pe_award_array = list(map(
             lambda x: [str(c) == "1" for c in x],
-            [solves_problem, solves_forum]
+            [solves_problem, solves_publication, solves_forum]
         ))
         
         
@@ -311,6 +320,7 @@ class Member:
                     lambda x: [str(c) == "1" for c in x],
                     element["awards_list"].split("|")
                 ))
+                self._private = (element["private"] == 1)
                 break
                 
     
@@ -351,13 +361,37 @@ class Member:
             return ["discord_id", self.discord_id()]
         else:
             raise Exception("Need either a username or a Discord ID")
+        
     
+    # Returns if the user wants privacy or not
+    def private(self) -> bool:
+        if self._private is None:
+            self.update_from_database()
+        return self._private
+    
+
+    def push_privacy_to_database(self, new_privacy: bool, connection = None):
+        
+        n_value = 1 if (new_privacy == True) else 0
+        dis_id = self.discord_id()
+        tquery = f"UPDATE members SET private = {n_value} WHERE discord_id = '{dis_id}';"
+
+        dbqueries.option_query(tquery, connection)
+        self._private = new_privacy
+
     
     # Returns the Project Euler username
     def username(self) -> str:
         if self._username is None:
             self.update_from_database()
         return self._username
+    
+
+    # Returns the Project Euler username or "Private Account" if the account is private
+    def username_option(self) -> str:
+        if self.private():
+            return "Private Account"
+        return self.username()
     
     
     # Returns the nickame of the account on project euler
@@ -369,9 +403,15 @@ class Member:
     
     # Returns the username formatted for discord codde blocks, along with the discord ping if available
     def username_ping(self) -> str:
+        
         dis_id = self.discord_id()
+
+        if self.private():
+            return f"`Private Profile`"
+
         if dis_id != "":
             return f"`{self.username()}` (<@{dis_id}>)"
+        
         return f"`{self.username()}`"  
     
 
@@ -451,6 +491,14 @@ class Member:
         
         self.update_from_database()
         return self._database_solve_array
+    
+
+    def has_solved(self, problem: int) -> bool:
+
+        if problem - 1 >= len(self.solve_array()):
+            return False
+
+        return self.solve_array()[problem - 1]
     
 
     # Returns the number of awards, classic ones and forum post ones
@@ -635,7 +683,7 @@ class Member:
             data = dbqueries.option_query(tquery, connection)
             
         return len(data.keys()) >= 1 and dis_id != ""
-    
+
     
     # -
     def is_account_in_database(self, connection = None) -> bool:
@@ -722,8 +770,9 @@ class Member:
         
         first_len = len(project_euler_data[0])
         second_len = len(project_euler_data[1])
+        third_len = len(project_euler_data[2])
         
-        nawards = [[], []]
+        nawards = [[], [], []]
         
         for i in range(first_len):
             if project_euler_data[0][i] == True and database_data[0][i] == False:
@@ -732,6 +781,11 @@ class Member:
         for i in range(second_len):
             if project_euler_data[1][i] == True and database_data[1][i] == False:
                 nawards[1].append(i)
+
+
+        for i in range(third_len):
+            if project_euler_data[2][i] == True and database_data[2][i] == False:
+                nawards[2].append(i)
             
         return nawards
         
@@ -769,13 +823,14 @@ class Member:
             awards = self.pe_award_count()
             awards_list = "|".join([
                 "".join(["01"[b] for b in awards_array[0]]),
-                "".join(["01"[b] for b in awards_array[1]])
+                "".join(["01"[b] for b in awards_array[1]]),
+                "".join(["01"[b] for b in awards_array[2]])
             ])
             
             tquery = f"INSERT INTO members (username, nickname, country, language, solved, \
-                solve_list, discord_id, awards, awards_list) VALUES (\
+                solve_list, discord_id, awards, awards_list, private) VALUES (\
                 '{username}', '{nickname}', '{country}', '{language}', \
-                {solved}, '{solve_list}', '', {awards}, '{awards_list}');"
+                {solved}, '{solve_list}', '', {awards}, '{awards_list}', 0);"
                 
         else:
             tquery = f"UPDATE members SET nickname='{nickname}', \
@@ -794,12 +849,13 @@ class Member:
         awards = self.pe_award_count()
         awards_list = "|".join([
             "".join(["01"[b] for b in awards_array[0]]),
-            "".join(["01"[b] for b in awards_array[1]])
+            "".join(["01"[b] for b in awards_array[1]]),
+            "".join(["01"[b] for b in awards_array[2]])
         ])
         
         tquery = f"UPDATE members SET awards={awards}, \
             awards_list='{awards_list}' WHERE username='{username}';"
-            
+
         dbqueries.single_req(tquery)
         
     
@@ -855,9 +911,12 @@ class Member:
         return result_list
     
 
-    # Returns a list of all the members that the bot has ever heard of
     @staticmethod
     def members() -> list:
+        
+        """ 
+        Returns a list of all the members that the bot has ever heard of. A list of `pe_api.Member` objects 
+        """
         
         database_data = dbqueries.single_req("SELECT * FROM members;")
         project_euler_data = ProjectEulerRequest("https://www.projecteuler.net/minimal=friends")
@@ -890,8 +949,10 @@ class Member:
         return result_list
     
 
-    # Returns a list like [102, 105] if the member has solved only 102 and 105
-    def solved_problems(self):        
+    def solved_problems(self): 
+        """
+        Returns a list like [102, 105] if the member has solved only 102 and 105
+        """       
         solves = []
         for index, solved in enumerate(self.solve_array()):
             if solved:
@@ -991,9 +1052,6 @@ def req_to_project_euler(url, login = True):
         phone_api.bot_crashed("Runtime Error")
         print(err)
         return None
-
-
-# def keep_session_alive():
 
 
 
@@ -1153,6 +1211,11 @@ def problems_list():
 def last_problem():
     data = ProjectEulerRequest(BASE_URL.format("problems")).response
     return len(data.split("\n")) - 2
+
+
+def last_problem_database():
+    data = dbqueries.single_req("SELECT MAX(len) AS most_solve FROM (SELECT LENGTH(solve_list) AS len FROM members) AS T;")
+    return data[0]["most_solve"]
 
 
 # return an array of the form [nb_posts, nb_kudos, 2nd_array]
@@ -1388,6 +1451,7 @@ def get_awards(username):
 
 # returns a list of the form [awards, changes]
 # with each changes of the form [index_award_1, index_award_2, ...]
+"""
 def update_awards(username):
 
     connection = dbqueries.open_con()
@@ -1414,7 +1478,7 @@ def update_awards(username):
     dbqueries.close_con(connection)
 
     return [current_data[0], changes]
-
+"""
 
 # returns a list of all the usernames in the database
 def all_members_in_database():
@@ -1433,13 +1497,35 @@ def get_awards_specs():
     data = ProjectEulerRequest(url).response
     soup = BeautifulSoup(data, 'html.parser')
 
+    awards_container = soup.find(id="awards_section").find_all("div", recursive=False)
+
+    div1 = awards_container[0]
+    div2 = awards_container[1]
+    div3 = awards_container[2]
+
+    # problem_awards = div1.find_all(class_="award_box")
+    # solves_problem = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in problem_awards]
+
+    # problem_publication = div2.find_all(class_="award_box")
+    # solves_publication = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in problem_publication]
+    
+    # forum_awards = div3.find_all(class_="award_box")
+    # solves_forum = [1 if len(problem.find_all(class_="smaller green strong")) == 1 else 0 for problem in forum_awards]
+
     all_awards = []
 
-    d_problems = soup.find(id="problem_solving_awards_section").find_all(class_="tooltip inner_box")
-    all_awards.append([problem.find_all(class_="strong")[0].text for problem in d_problems])
+    problem_awards = div1.find_all(class_="tooltip inner_box")
+    all_awards.append([problem.find_all(class_="strong")[0].text for problem in problem_awards])
 
-    d_problems = soup.find(id="forum_based_awards_section").find_all(class_="tooltip inner_box")
-    all_awards.append([problem.find_all(class_="strong")[0].text for problem in d_problems])
+    problem_publication = div2.find_all(class_="award_box")
+    all_awards.append([problem.find_all(class_="strong")[0].text for problem in problem_publication])
+
+    forum_awards = div3.find_all(class_="award_box")
+    all_awards.append([problem.find_all(class_="strong")[0].text for problem in forum_awards])
+
+    # d_problems = soup.find(id="forum_based_awards_section").find_all(class_="tooltip inner_box")
+    
+    # all_awards.append([problem.find_all(class_="strong")[0].text for problem in d_problems])
 
     return all_awards
 
@@ -1573,21 +1659,112 @@ def update_global_stats():
     return True # Everything went fine
 
 
+def get_fastest_solvers(problem: int):
+
+    page_url = NOT_MINIMAL_BASE_URL.format(f"fastest={problem}")
+    solvers_data = ProjectEulerRequest(page_url).response
+    solvers_soup = BeautifulSoup(solvers_data, 'html.parser')
+
+    solvers_soup
+
+    if "No data available" in solvers_soup.text:
+        return {}
+    
+    rows = solvers_soup.find_all(class_="grid")[0].find_all("tr")
+    number_of_solvers = len(rows) - 1
+
+    data = {}
+
+    for rank, element in enumerate(rows, start = 0): # starts at 0 because we want to exclude row "0" being the "user, country, language, time"
+        
+        lines = element.find_all("td")
+
+        if len(lines) != 5:
+            continue
+
+        """
+        lines[0] = rank
+        lines[1] = username
+        lines[2] = country
+        lines[3] = language
+        lines[4] = time
+        """
+
+        username = lines[1].text
+
+        try_nickname = lines[1].find_all("span")
+        if len(try_nickname) != 0:
+            username = lines[1].find("span").get("title")
+
+        solve_time_string = lines[4].text
+
+        correspondances = {
+            "second": 1,
+            "minute": 60,
+            "hour": 3600,
+            "day": 86400,
+            "week": 604800,
+            "year": 31536000
+        }
+
+        solve_time = 0
+        for k in correspondances.keys():
+            for part_str in solve_time_string.split(", "):
+                
+                if k in part_str:
+                    solve_time += correspondances[k] * int(part_str.split()[0])
+
+        data[str(rank)] = {"username": username, "solve_time": solve_time}
+
+    return data
+
+
+def update_fastest_solves(starting_problem: int = 277):
+
+    last_pb = last_problem()
+
+    data_filename = "saved_data/fastest_solves.json"
+
+    with open(data_filename, "r") as f:
+        whole_data = json.load(f)
+
+    console.log("Refreshing data for solvers.")
+
+    wait_time = 1
+
+    for problem in range(starting_problem, last_pb + 1):
+        
+        data = get_fastest_solvers(problem)
+        whole_data[problem] = data
+        
+        console.log(problem)
+        time.sleep(wait_time)
+
+    with open(data_filename, "w") as f:
+        json.dump(whole_data, f, indent=4)
+
+
+
 
 if __name__ == "__main__":
-    
+
     dbqueries.setup_database_keys()
-    
-    x = Member(_username = "Teyzer18")
-    # print(x.unsolved_problems())
 
-    print(ProjectEulerRequest("https://projecteuler.net/minimal=friends", False).response)
+    m = Member(_username = "Teyzer18")
+    print(m.has_solved(906))
 
-    # z = Member.members()
-    # for m in z:
-    #     m.push_basics_to_database()
-    #     print(m.username())
-    
-    console.log(TOTAL_REQUESTS, dbqueries.DB_TOTAL_REQUESTS)
+    print(last_problem_database())
+
+    # minimals = ""
+
+    # l = 903
+
+    # for i in range(1, l + 1):
+    #     txt = ProjectEulerRequest(BASE_URL.format(str(i))).response
+    #     minimals += f"Problem #{i}" + txt + "\n\n"
+    #     console.log(i)
+
+    # with open("saved_data/minimals.txt", "w") as f:
+    #     f.write(minimals)
     
     
