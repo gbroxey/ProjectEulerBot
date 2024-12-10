@@ -6,12 +6,15 @@ import pytz
 import json
 import time
 
-import dbqueries
+# import dbqueries
+import pe_database
 
 import phone_api
 
 from rich.console import Console
 from rich import inspect
+
+from typing import List, Dict, Optional, Any, Tuple
 
 
 TOTAL_REQUESTS = 0
@@ -25,7 +28,20 @@ CREDENTIALS_LOCATION = "session_cookies.txt"
 BASE_URL = "https://projecteuler.net/minimal={0}"
 NOT_MINIMAL_BASE_URL = "https://projecteuler.net/{0}"
 
+COOKIES = {}
+
 console = Console()
+
+
+def pe_api_setup(cookies, account) -> None:
+
+    global COOKIES
+    COOKIES = cookies
+
+    account_name = account["username"]
+
+    console.log(f"[-] Added credential for account {account_name}")
+
 
 
 class ProjectEulerRequest:
@@ -54,16 +70,11 @@ class ProjectEulerRequest:
         
         TOTAL_REQUESTS += 1
         SESSION_REQUESTS += 1
-        
-        with open("keys.json", "r") as f:
-            keys = json.load(f)
 
         if need_login:
-            cookies = keys["session_keys"]
+            cookies = COOKIES
         else:
             cookies = {}
-        
-        # console.log(cookies)
 
         try:
             # Do the request to the website, with the right cookies that emulate the account
@@ -142,13 +153,15 @@ class PE_Problem:
             elif len(properties) == 4:
                 difficulty = int(properties[2].split(": ")[1].split("%")[0])
                 title = properties[3].replace("\"", "")
+            else:
+                raise Exception("Properties did not have 3 or 4 fields, resulted in title not being defined")
             
             pb = PE_Problem(problem_id, name=title, unix_publication=timestamps[problem_id - 1], solves=solvers, difficulty_rating=difficulty)
             res_list.append(pb)
                 
         return res_list
         
-        
+
 class Member:
     
     
@@ -291,9 +304,30 @@ class Member:
     def update_from_database(self, connection = None, data = None):
         
         key_id, value_id = self.identity()
-        check_function = lambda x: 0 if x is None else \
-            sum([1 if str(x[k][key_id]) == str(value_id) else 0 for k in x.keys()])
+        # console.log(key_id, value_id)
+        # check_function = lambda x: 0 if x is None else \
+        #    sum([1 if str(x[k][key_id]) == str(value_id) else 0 for k in x.keys()])
         
+        def check_function(data: Optional[List]) -> int:
+
+            """
+            This function is defined for what happens after.
+            If the member we are looking for is within the data, we return 1 but
+            in any other case we return 0
+            """
+
+            # If the data is None, obviously, we want to rety
+            if data is None:
+                return 0
+            
+            # But if the member is within the database's data, we return 1
+            for member in data:
+                if member[key_id] == str(value_id):
+                    return 1
+            
+            return 0
+
+
         while check_function(data) == 0:
             
             if data is not None:
@@ -301,11 +335,13 @@ class Member:
                 self.push_basics_to_database()
             
             tquery = "SELECT * FROM members;"
-            data = dbqueries.option_query(tquery, connection)
+            data = pe_database.query_option(tquery, connection)
+            # print(data, check_function(data), data is not None)
+            # data = dbqueries.option_query(tquery, connection)
         
-        for k in data.keys():
+        for element in data:
             
-            element = data[k]
+            # element = data[k]
             if element[key_id] == value_id:
                 
                 self._username = element["username"]
@@ -327,7 +363,20 @@ class Member:
     def update_from_database_kudo(self, connection = None, data = None):
         
         key_id, value_id = self.identity()
-        check_function = lambda x: 0 if x is None else len(x.keys())
+
+        def check_function(data: Optional[List]) -> int:
+
+            """
+            Returns 0 if the data does not seem correct, and anything
+            but 0 if there is no apparent trouble
+            """
+
+            if data is None:
+                return 0
+            return len(data)
+
+
+        # check_function = lambda x: 0 if x is None else len(x.keys())
         
         while check_function(data) == 0:
             
@@ -338,11 +387,12 @@ class Member:
             tquery = f"SELECT * FROM members \
                 INNER JOIN pe_posts ON members.username = pe_posts.username \
                 WHERE members.{key_id} = '{value_id}'"
-            data = dbqueries.option_query(tquery, connection)
+            data = pe_database.query_option(tquery, connection)
+            # data = dbqueries.option_query(tquery, connection)
     
-        for k in data.keys():
+        for element in data:
             
-            element = data[k]
+            # element = data[k]
             if element[key_id] == value_id:
                 
                 self._database_kudo_count = int(element["kudos"])
@@ -354,7 +404,16 @@ class Member:
                 break
         
     
-    def identity(self) -> tuple:
+    def identity(self) -> Tuple[str, str]:
+
+        """
+        Returns a list of two elements, a key, and a value.
+        It allows to check for the identity of the member with member[key] == value.
+
+        Note that this is needed because a member can have an identity coming from discord
+        or from the project euler website, depending on where we have initiated the object.
+        """
+
         if self._username is not None:
             return ["username", self.username()]
         elif self._discord_id is not None:
@@ -376,7 +435,8 @@ class Member:
         dis_id = self.discord_id()
         tquery = f"UPDATE members SET private = {n_value} WHERE discord_id = '{dis_id}';"
 
-        dbqueries.option_query(tquery, connection)
+        # dbqueries.option_query(tquery, connection)
+        pe_database.query_option(tquery, connection)
         self._private = new_privacy
 
     
@@ -533,13 +593,17 @@ class Member:
         return self._database_award_count
         
 
-    # Returns an array with the awards, like
-    # [[True, False, ..;], [True, False, ...]]
-    # Where each boolean represents if the award has been obtained
-    # First array is for main awards and second for forum awards
-    # Use pe_api.get_awards_specs to get the names of the awards
     def award_array(self) -> list:
+
+        """
+        Returns an array with the awards, like
+        [[True, False, ..;], [True, False], [True, False, ...]]
+        Where each boolean represents if the award has been obtained
         
+        First array is for main awards and second for forum awards
+        Use pe_api.get_awards_specs to get the names of the awards
+        """
+
         if self._pe_award_array is not None:
             return self._pe_award_array
         elif self._database_award_array is not None:
@@ -567,9 +631,12 @@ class Member:
         return self._database_award_array
     
     
-    # The total kudo count
-    def kudo_count(self):
-        
+    def kudo_count(self) -> int:
+
+        """
+        Return the total kudo count
+        """
+
         if self._pe_kudo_count is not None:
             return self._pe_kudo_count
         elif self._database_kudo_count is not None:
@@ -597,11 +664,14 @@ class Member:
         return self._database_kudo_count
     
     
-    # The list of kudos, in an array like
-    # [[107, 5], [108, 2]]
-    # If the user has 5 kudos for their post on 107 and 2 for 108
     def kudo_array(self):
-        
+
+        """
+        The list of kudos, in an array like
+        [[107, 5], [108, 2]]
+        If the user has 5 kudos for their post on 107 and 2 for 108
+        """
+
         if self._pe_kudo_array is not None:
             return self._pe_kudo_array
         elif self._database_kudo_array is not None:
@@ -670,8 +740,12 @@ class Member:
         return (current_rank, valid_members)
 
         
-    # Returns true if the acccount if linked to a project euler account
     def is_discord_linked(self, connection = None, data = None) -> bool:
+
+        """
+        Returns true if the account is linked to a project euler account, 
+        that is, if there is an entry in the database with the corresponding discord_id
+        """
         
         dis_id = self.discord_id()
         
@@ -680,9 +754,10 @@ class Member:
         
         if data is None:
             tquery = f"SELECT * FROM members WHERE discord_id='{dis_id}';"
-            data = dbqueries.option_query(tquery, connection)
+            data = pe_database.query_option(tquery, connection)
+            # data = dbqueries.option_query(tquery, connection)
             
-        return len(data.keys()) >= 1 and dis_id != ""
+        return len(data) >= 1 and dis_id != ""
 
     
     # -
@@ -691,7 +766,7 @@ class Member:
         key_id, value_id = self.identity()
         tquery = f"SELECT * FROM members WHERE {key_id}='{value_id}';"
         
-        return len(dbqueries.option_query(tquery, connection).keys()) >= 1
+        return len(pe_database.query_option(tquery, connection)) >= 1
         
     
     # -
@@ -802,7 +877,8 @@ class Member:
         tquery = f"INSERT INTO pe_posts (username, posts_number, kudos, posts_list) \
             VALUES ('{self.username()}', 0, {self.kudo_count()}, '{formatted}');"
             
-        dbqueries.single_req(tquery)
+        # dbqueries.single_req(tquery)
+        pe_database.query_single(tquery)
 
     
     # -
@@ -837,7 +913,9 @@ class Member:
                 country='{country}', language='{language}', solved={solved},\
                 solve_list='{solve_list}' WHERE username='{username}';"
                 
-        dbqueries.single_req(tquery)
+        print(tquery)
+        pe_database.query_single(tquery)
+        # dbqueries.single_req(tquery)
         
     
     # -
@@ -856,7 +934,8 @@ class Member:
         tquery = f"UPDATE members SET awards={awards}, \
             awards_list='{awards_list}' WHERE username='{username}';"
 
-        dbqueries.single_req(tquery)
+        pe_database.query_single(tquery)
+        # dbqueries.single_req(tquery)
         
     
     # Returns a list of all the members in the friend list of the bot on project euler
@@ -889,11 +968,17 @@ class Member:
     @staticmethod
     def members_database() -> list:
         
-        database_data = dbqueries.single_req("SELECT * FROM members;")
+        # database_data = dbqueries.single_req("SELECT * FROM members;")
+        database_data = pe_database.query_single("SELECT * FROM members;")
         
+        # usernames = list(map(
+        #     lambda k: database_data[k]["username"],
+        #     database_data 
+        # ))
+
         usernames = list(map(
-            lambda k: database_data[k]["username"],
-            database_data 
+            lambda member: member["username"],
+            database_data
         ))
         
         result_list = []
@@ -918,12 +1003,18 @@ class Member:
         Returns a list of all the members that the bot has ever heard of. A list of `pe_api.Member` objects 
         """
         
-        database_data = dbqueries.single_req("SELECT * FROM members;")
+        # database_data = dbqueries.single_req("SELECT * FROM members;")
+        database_data = pe_database.query_single("SELECT * FROM members;")
         project_euler_data = ProjectEulerRequest("https://www.projecteuler.net/minimal=friends")
         
+        # database_usernames = list(map(
+        #     lambda k: database_data[k]["username"],
+        #     database_data 
+        # ))
+
         database_usernames = list(map(
-            lambda k: database_data[k]["username"],
-            database_data 
+            lambda member: member["username"],
+            database_data
         ))
         
         project_euler_usernames = list(map(
@@ -949,7 +1040,7 @@ class Member:
         return result_list
     
 
-    def solved_problems(self): 
+    def solved_problems(self) -> List[int]:
         """
         Returns a list like [102, 105] if the member has solved only 102 and 105
         """       
@@ -960,13 +1051,15 @@ class Member:
         return solves
 
 
-    # Returns a list like [763] if the member only has 763 left to
-    def unsolved_problems(self):        
-        unsolves = []
+    def unsolved_problems(self) -> List[int]:
+        """
+        Returns a list like [763] if the member only has 763 left to
+        """
+        not_solves = []
         for index, solved in enumerate(self.solve_array()):
             if not solved:
-                unsolves.append(index + 1)
-        return unsolves
+                not_solves.append(index + 1)
+        return not_solves
     
 
     def make_problem_unsolved(self, problem: int):
@@ -977,33 +1070,34 @@ class Member:
         tquery = f"UPDATE members SET solve_list = '{cur_solves}', solved = {self.solve_count() - 1} \
             WHERE username = '{self.username()}';"
         
-        dbqueries.single_req(tquery)
+        # dbqueries.single_req(tquery)
+        pe_database.query_single(tquery)
         
 
 
-def update_process() -> None:
+def update_process() -> Optional[List[Dict[str, Any]]]:
     
     members = Member.members()
     skipped_member_count = 0
     
     new_changes = []
     
-    m: Member
-    for m in members:
+    member: Member
+    for member in members:
         
-        if m.have_solves_changed():    
+        if member.have_solves_changed():
             
-            nsolves = m.get_new_solves()
-            console.log(f"New solve(s) for {m.username()}: {nsolves}")
-            m.push_basics_to_database()
+            new_solves = member.get_new_solves()
+            console.log(f"New solve(s) for {member.username()}: {new_solves}")
+            member.push_basics_to_database()
+
+            new_awards = None
+            if member.have_awards_changed():
+                new_awards = member.get_new_awards()
+                console.log(f"New award(s) for {member.username()}: {new_awards}")
+                member.push_awards_to_database()
             
-            nawards = None
-            if m.have_awards_changed():
-                nawards = m.get_new_awards()
-                console.log(f"New award(s) for {m.username()}: {nawards}")
-                m.push_awards_to_database()
-            
-            new_changes.append({"member": m, "solves": nsolves, "awards": nawards})
+            new_changes.append({"member": member, "solves": new_solves, "awards": new_awards})
             
         else:
             skipped_member_count += 1
@@ -1057,120 +1151,120 @@ def req_to_project_euler(url, login = True):
 
 # Called every 5 minutes
 # Checks every problem, awards, of every member, and announce if there is any change
-def keep_session_alive():
+# def keep_session_alive():
 
-    # Doing the right request, to https://projecteuler.net/minimal=friends, to the minimal API
-    url = BASE_URL.format("friends")
-    data = ProjectEulerRequest(url).response
+#     # Doing the right request, to https://projecteuler.net/minimal=friends, to the minimal API
+#     url = BASE_URL.format("friends")
+#     data = ProjectEulerRequest(url).response
 
-    # If data is None, it means that the request was unsuccessful
-    if data is None:
-        return None
+#     # If data is None, it means that the request was unsuccessful
+#     if data is None:
+#         return None
 
-    all_solved = []
+#     all_solved = []
 
-    # Format data to get into the database
-    format_func = lambda x: x.replace("C###", "Csharp##").replace("F###", "Fsharp##").split("##") 
+#     # Format data to get into the database
+#     format_func = lambda x: x.replace("C###", "Csharp##").replace("F###", "Fsharp##").split("##") 
 
-    # Go take a look for yourself of https://projecteuler.net/minimal=friends, you may understand better how is data formatted
-    members = list(map(format_func, data.split("\n")))
-    db_members = dbqueries.single_req("SELECT * FROM members;")
-    names = list(map(lambda x: db_members[x]["username"], db_members))
+#     # Go take a look for yourself of https://projecteuler.net/minimal=friends, you may understand better how is data formatted
+#     members = list(map(format_func, data.split("\n")))
+#     db_members = dbqueries.single_req("SELECT * FROM members;")
+#     names = list(map(lambda x: db_members[x]["username"], db_members))
 
-    # Connection to the actual database
-    connection = dbqueries.open_con()
+#     # Connection to the actual database
+#     connection = dbqueries.open_con()
 
-    # Count the number of people for which nothing has changed (not really useful, mainly for tests)
-    people_passed_nothing_changed = 0
+#     # Count the number of people for which nothing has changed (not really useful, mainly for tests)
+#     people_passed_nothing_changed = 0
 
-    # Assert that there is no error in the retrieve
-    if len(names) < 10:
-        return None
-    #print(data)
-    for member in members:
+#     # Assert that there is no error in the retrieve
+#     if len(names) < 10:
+#         return None
+#     #print(data)
+#     for member in members:
 
-        # For the last line of the retrieved data, which is only a blank line
-        if len(member) == 1:
-            continue
+#         # For the last line of the retrieved data, which is only a blank line
+#         if len(member) == 1:
+#             continue
 
-        # Format member: [Account, Nickname, Country, Solves Count, Level, Binary String of solves]
-        # A cell of format members is "" if the members has not set the optional parameter
-        format_member = list(map(lambda x: x if x != "" else "Undefined", member))
-        # print(format_member)
-        # By default, a member of level 0 does not even have their level displayed on the API
-        format_member[4] = (format_member[4] if format_member[4] != "Undefined" else '0')
-        format_member[6] = format_member[6].replace("\r", "")
+#         # Format member: [Account, Nickname, Country, Solves Count, Level, Binary String of solves]
+#         # A cell of format members is "" if the members has not set the optional parameter
+#         format_member = list(map(lambda x: x if x != "" else "Undefined", member))
+#         # print(format_member)
+#         # By default, a member of level 0 does not even have their level displayed on the API
+#         format_member[4] = (format_member[4] if format_member[4] != "Undefined" else '0')
+#         format_member[6] = format_member[6].replace("\r", "")
 
-        # If the members that we just retrieved is part of the database
-        if format_member[0] in names:
+#         # If the members that we just retrieved is part of the database
+#         if format_member[0] in names:
 
-            # Then the database member is defined, and we can retrieve it
-            db_member = db_members[names.index(format_member[0])]
+#             # Then the database member is defined, and we can retrieve it
+#             db_member = db_members[names.index(format_member[0])]
 
-            # This check means: if the solves in the database is not what we just retrieved, then this means there was a solve (or more)
-            if str(db_member['solved']) != format_member[4]:
+#             # This check means: if the solves in the database is not what we just retrieved, then this means there was a solve (or more)
+#             if str(db_member['solved']) != format_member[4]:
 
-                # Just for debugging
-                print("Change on member", format_member[0], "on problems solved")
+#                 # Just for debugging
+#                 print("Change on member", format_member[0], "on problems solved")
 
-                previously_solved = db_member["solve_list"]
-                currently_solved = format_member[6]
+#                 previously_solved = db_member["solve_list"]
+#                 currently_solved = format_member[6]
 
-                # In case what was in the database does not have the same length of the current binary string (ie if there was a new problem)
-                previously_solved = previously_solved + "0" * (len(currently_solved) - len(previously_solved))
+#                 # In case what was in the database does not have the same length of the current binary string (ie if there was a new problem)
+#                 previously_solved = previously_solved + "0" * (len(currently_solved) - len(previously_solved))
 
-                solved = []
+#                 solved = []
 
-                l = len(currently_solved)
-                for i in range(1, l + 1):
-                    # If the current character is not the same as the previous. We take as true that it's always from 0 to 1 (i.e. there is no "unsolved")
-                    if previously_solved[i - 1] != currently_solved[i - 1]:
+#                 l = len(currently_solved)
+#                 for i in range(1, l + 1):
+#                     # If the current character is not the same as the previous. We take as true that it's always from 0 to 1 (i.e. there is no "unsolved")
+#                     if previously_solved[i - 1] != currently_solved[i - 1]:
                         
-                        # Need to know the position of ths solver
-                        problem_data = problem_def(i)
-                        solver_position = problem_data[3]
+#                         # Need to know the position of ths solver
+#                         problem_data = problem_def(i)
+#                         solver_position = problem_data[3]
 
-                        # Insert the solve in the database
-                        temp_query = "INSERT INTO solves (member, problem, solve_date, position) VALUES ('{0}', {1}, NOW(), {2})"
-                        temp_query = temp_query.format(format_member[0], i, solver_position)
-                        dbqueries.query(temp_query, connection)
+#                         # Insert the solve in the database
+#                         temp_query = "INSERT INTO solves (member, problem, solve_date, position) VALUES ('{0}', {1}, date('now'), {2})"
+#                         temp_query = temp_query.format(format_member[0], i, solver_position)
+#                         dbqueries.query(temp_query, connection)
 
-                        # Add it in the solves array
-                        solved.append(i)
+#                         # Add it in the solves array
+#                         solved.append(i)
 
-                # Add everything in a nice array, the subarray here is of the form [Account, Solves Count, Discord ID, Level]
-                all_solved.append([format_member[0], solved, db_member['discord_id'], format_member[4]])
+#                 # Add everything in a nice array, the subarray here is of the form [Account, Solves Count, Discord ID, Level]
+#                 all_solved.append([format_member[0], solved, db_member['discord_id'], format_member[4]])
 
-                # Again for debug
-                print("{0} solved the problem {1}".format(format_member[0], ",".join(list(map(str, solved)))))
+#                 # Again for debug
+#                 print("{0} solved the problem {1}".format(format_member[0], ",".join(list(map(str, solved)))))
 
-                # We send the new data to the database
-                temp_query = "UPDATE members SET solved={0}, solve_list='{1}' WHERE username = '{2}';"
-                temp_query = temp_query.format(format_member[4], format_member[6], format_member[0])
-                dbqueries.query(temp_query, connection)
+#                 # We send the new data to the database
+#                 temp_query = "UPDATE members SET solved={0}, solve_list='{1}' WHERE username = '{2}';"
+#                 temp_query = temp_query.format(format_member[4], format_member[6], format_member[0])
+#                 dbqueries.query(temp_query, connection)
 
-            else:
-                # Only for debugging
-                people_passed_nothing_changed += 1
+#             else:
+#                 # Only for debugging
+#                 people_passed_nothing_changed += 1
         
-        # Else, the member was not in the databse, meaning we have to get his profile
-        else:
+#         # Else, the member was not in the databse, meaning we have to get his profile
+#         else:
 
-            # Need the awards, that are not retrieved by default with minimal=friends    
-            awards = get_awards(format_member[0])
+#             # Need the awards, that are not retrieved by default with minimal=friends    
+#             awards = get_awards(format_member[0])
 
-            # Then add all of this in the database
-            temp_query = "INSERT INTO members (username, nickname, country, language, solved, solve_list, discord_id, awards, awards_list) VALUES ('{0}', '{1}', '{2}', '{3}', {4}, '{5}', '', {6}, '{7}')"
-            temp_query = temp_query.format(format_member[0], format_member[1], format_member[2], format_member[3], format_member[4], format_member[6], awards[0], awards[1])
-            dbqueries.query(temp_query, connection)
+#             # Then add all of this in the database
+#             temp_query = "INSERT INTO members (username, nickname, country, language, solved, solve_list, discord_id, awards, awards_list) VALUES ('{0}', '{1}', '{2}', '{3}', {4}, '{5}', '', {6}, '{7}')"
+#             temp_query = temp_query.format(format_member[0], format_member[1], format_member[2], format_member[3], format_member[4], format_member[6], awards[0], awards[1])
+#             dbqueries.query(temp_query, connection)
             
-            # Again some debugging
-            print("Added", format_member[0])
+#             # Again some debugging
+#             print("Added", format_member[0])
 
-    print("End of check, passed {0} people".format(people_passed_nothing_changed))
+#     print("End of check, passed {0} people".format(people_passed_nothing_changed))
 
-    dbqueries.close_con(connection)
-    return all_solved
+#     dbqueries.close_con(connection)
+#     return all_solved
 
 
 
@@ -1179,9 +1273,10 @@ def push_solve_to_database(member: Member, solve: PE_Problem):
     pb_def = problem_def(solve.problem_id)
     position = pb_def[3]
 
-    temp_query = "INSERT INTO solves (member, problem, solve_date, position) VALUES ('{0}', {1}, NOW(), {2})"
+    temp_query = "INSERT INTO solves (member, problem, solve_date, position) VALUES ('{0}', {1}, datetime('now'), {2})"
     temp_query = temp_query.format(member.username(), solve.problem_id, position)
-    dbqueries.single_req(temp_query)
+    pe_database.query_single(temp_query)
+    # dbqueries.single_req()
 
 
 
@@ -1214,7 +1309,8 @@ def last_problem():
 
 
 def last_problem_database():
-    data = dbqueries.single_req("SELECT MAX(len) AS most_solve FROM (SELECT LENGTH(solve_list) AS len FROM members) AS T;")
+    data = pe_database.query_single("SELECT MAX(len) AS most_solve FROM (SELECT LENGTH(solve_list) AS len FROM members) AS T;")
+    # data = dbqueries.single_req("SELECT MAX(len) AS most_solve FROM (SELECT LENGTH(solve_list) AS len FROM members) AS T;")
     return data[0]["most_solve"]
 
 
@@ -1531,35 +1627,45 @@ def get_awards_specs():
 
 
 # Get the solves of the last few days in the database
-def get_solves_in_database(days_count = 0):
+def get_solves_in_database():
 
-    connection = dbqueries.open_con()
+    # connection = dbqueries.open_con()
+    connection = pe_database.open_connection()
 
-    if days_count == 0:
-        temp_query = "SELECT * FROM solves"
-    else:
-        temp_query = "SELECT * FROM solves WHERE DATE(solve_date) BETWEEN DATE(CURRENT_DATE() - INTERVAL {0} DAY) AND DATE(CURRENT_DATE());"
-        temp_query = temp_query.format(days_count)
-        
-    data = dbqueries.query(temp_query, connection)
-    dbqueries.close_con(connection)
+    temp_query = "SELECT * FROM solves;"
+    # if days_count == 0:
+    #     temp_query = "SELECT * FROM solves"
+    # else:
+    #     temp_query = "SELECT * FROM solves WHERE DATE(solve_date) BETWEEN DATE(CURRENT_DATE() - INTERVAL {0} DAY) AND DATE(CURRENT_DATE());"
+    #     temp_query = temp_query.format(days_count)
+    
+    data = pe_database.query(temp_query, connection)
+    # data = dbqueries.query(temp_query, connection)
+    pe_database.close_connection(connection)
+    # dbqueries.close_con(connection)
 
     return data
 
 
 # Get the global solves in the database
-def get_global_solves_in_database(days_count = 0):
+def get_global_solves_in_database():
 
-    connection = dbqueries.open_con()
+    connection = pe_database.open_connection()
+    # connection = dbqueries.open_con()
 
-    if days_count == 0:
-        temp_query = "SELECT id, solves, DATE(date_stat) FROM global_stats"
-    else:
-        temp_query = "SELECT id, solves, DATE(date_stat) FROM global_stats WHERE DATE(date_stat) BETWEEN DATE(CURRENT_DATE() - INTERVAL {0} DAY) AND DATE(CURRENT_DATE());"
-        temp_query = temp_query.format(days_count)
+    # if days_count == 0:
+    #     temp_query = "SELECT id, solves, date_stat FROM global_stats"
+    # else:
+    #     temp_query = 
+    #     temp_query = temp_query.format(days_count)
+        # print(temp_query)
 
-    data = dbqueries.query(temp_query, connection)
-    dbqueries.close_con(connection)
+    temp_query = "SELECT id, solves, date_stat FROM global_stats"
+
+    data = pe_database.query(temp_query, connection)
+    # data = dbqueries.query(temp_query, connection)
+    pe_database.close_connection(connection)
+    # dbqueries.close_con(connection)
 
     return data 
 
@@ -1611,21 +1717,24 @@ def get_global_stats():
 def update_global_stats():
 
     # Open connection to the database
-    connection = dbqueries.open_con()
+    # connection = dbqueries.open_con()
+    connection = pe_database.open_connection()
 
     # The query to retrieve saved statistics
-    temp_query = "SELECT * FROM global_constants"
-    previous_data = dbqueries.query(temp_query, connection)
+    temp_query = "SELECT * FROM global_constants;"
+    # previous_data = dbqueries.query(temp_query, connection)
+    previous_data = pe_database.query(temp_query, connection=connection)
 
     # Ensure the retrieve was successful
     if len(previous_data) == 1:
         previous_data = previous_data[0]
     else:
-        dbqueries.close_con(connection)
+        pe_database.close_connection(connection)
+        # dbqueries.close_con(connection)
         return False
 
     # Assert the current day has not already been retrieved
-    current_day = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d")
+    current_day = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
     last_date = datetime.datetime.strptime(previous_data["saved_date"], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
 
     if current_day == last_date:
@@ -1644,17 +1753,21 @@ def update_global_stats():
         return False
 
     # And bring it back in the database
-    temp_query = "INSERT INTO global_stats (solves, levels, awards, date_stat) VALUES ({0}, {1}, {2}, NOW())"
+    temp_query = "INSERT INTO global_stats (solves, levels, awards, date_stat) VALUES ({0}, {1}, {2}, datetime('now'));"
     temp_query = temp_query.format(problem_diff, level_diff, award_diff)
-    dbqueries.query(temp_query, connection)
+    pe_database.query(temp_query, connection)
+    # dbqueries.query(temp_query, connection)
 
     # Update the last data
-    temp_query = "UPDATE global_constants SET solves_count = {0}, levels_count = {1}, awards_count = {2}, saved_date = NOW()"
+    temp_query = "UPDATE global_constants SET solves_count = {0}, levels_count = {1}, awards_count = {2}, saved_date = datetime('now');"
     temp_query = temp_query.format(problem_count, level_count, award_count)
-    dbqueries.query(temp_query, connection)
+    pe_database.query(temp_query, connection)
+    # dbqueries.query(temp_query, connection)
+
 
     # Alert my phone that everything has went as planned
     phone_api.bot_success("Added stats for day " + current_day)
+    pe_database.close_connection(connection)
 
     return True # Everything went fine
 

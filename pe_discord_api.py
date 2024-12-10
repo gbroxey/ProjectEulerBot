@@ -7,7 +7,8 @@ import pytz
 from math import *
 import json
 
-import dbqueries
+# import dbqueries
+import pe_database
 import pe_api
 import pe_image
 import pe_plot
@@ -32,6 +33,7 @@ from rich.console import Console
 from rich import inspect
 
 import sympy
+from typing import Dict, List, Tuple, Any, Optional
 
 
 console = Console(record = True)
@@ -94,6 +96,16 @@ THREAD_DEFAULT_NAME_FORMAT = "Problem #{0} discussion"
 PROBLEM_LINK = "[Jump to problem {0}](<https://projecteuler.net/problem={0}>)"
 
 
+def pe_discord_api_setup(channels: dict):
+
+    global CHANNELS_TO_ANNOUNCE, SPECIAL_CHANNELS_TO_ANNOUNCE, SMALL_ANNOUNCEMENTS_CHANNEL, THREADS_CHANNEL
+
+    CHANNELS_TO_ANNOUNCE = channels["solve_channel"]
+    SPECIAL_CHANNELS_TO_ANNOUNCE = channels["award_channel"]
+    SMALL_ANNOUNCEMENTS_CHANNEL = channels["small_channel"]
+    THREADS_CHANNEL = channels["thread_channel"]
+
+
 
 async def major_update():
 
@@ -102,6 +114,7 @@ async def major_update():
 
     REPEATS_SINCE_START += 1
 
+
     # SANITY CHECKS
 
     website_down = pe_session.is_website_down()
@@ -109,8 +122,11 @@ async def major_update():
 
     # console.log(website_down, session_alive)
 
+    # This is turned down for now as it doesn't work
+    """
     if not website_down and not session_alive:
         pe_session.refresh_tokens()
+    """
 
     # In the console
     console.log(REPEATS_SINCE_START, end="| ")
@@ -284,7 +300,7 @@ async def command_status(ctx):
         str(pe_api.TOTAL_SUCCESS_REQUESTS),
         str(pe_api.TOTAL_REQUESTS), 
         fetch_starting_time,
-        dbqueries.DB_TOTAL_REQUESTS,
+        pe_database.DB_TOTAL_REQUESTS,
         website_status,
         session_status
     )
@@ -342,26 +358,29 @@ async def command_link(ctx, username: str):
     await major_update()
 
     discord_user_id = ctx.author.id
-    database_discord_user = dbqueries.single_req("SELECT * FROM members WHERE discord_id = '{0}'".format(discord_user_id))
-    if len(database_discord_user.keys()) != 0:
-        sentence = "Your discord account is already linked to the account `{0}`, type /unlink to unlink it".format(database_discord_user[0]["username"])
+    database_discord_user = pe_database.query_single(f"SELECT * FROM members WHERE discord_id = '{discord_user_id}';")
+    # database_discord_user = dbqueries.single_req("SELECT * FROM members WHERE discord_id = '{0}'".format(discord_user_id))
+    if len(database_discord_user) > 0:
+        sentence = f"Your discord account is already linked to the account `{database_discord_user[0]['username']}`, type /unlink to unlink it"
         return await ctx.respond(sentence)
 
-    user = dbqueries.single_req("SELECT * FROM members WHERE username = '{0}'".format(username))
-    if len(user.keys()) == 0:
+    # user = dbqueries.single_req("SELECT * FROM members WHERE username = '{0}'".format(username))
+    users = pe_database.query_single(f"SELECT * FROM members WHERE username = '{username}';")
+    if len(users) == 0:
         return await ctx.respond("This username is not in my friend list. Add the bot account on project euler first: 1910895_2C6CP6OuYKOwNlTdL8A5fXZ0p5Y41CZc\nThen ensure your account is not unlisted.\nIf you think this is a mistake, send a DM to <@439143335932854272>.")
 
-    user = user[0]
+    user = users[0]
     if str(user["discord_id"]) != "":
-        return await ctx.respond("This account is already linked to <@{0}>".format(user["discord_id"]))
+        return await ctx.respond(f"This account is already linked to <@{user['discord_id']}>")
 
-    temp_query = "UPDATE members SET discord_id = '{0}' WHERE username = '{1}'".format(discord_user_id, username)
-    dbqueries.single_req(temp_query)
+    temp_query = f"UPDATE members SET discord_id = '{discord_user_id}' WHERE username = '{username}'"
+    # dbqueries.single_req(temp_query)
+    pe_database.query_single(temp_query)
 
     m = pe_api.Member(_username = username)
     await update_member_roles(m)
 
-    return await ctx.respond("Your account was linked to `{0}`!".format(username))
+    return await ctx.respond(f"Your account was linked to `{username}`!")
 
 
 @bot.slash_command(name="unlink", description="Unlink your Project Euler account with your discord account")
@@ -370,13 +389,15 @@ async def command_unlink(ctx):
     await ctx.defer()
 
     discord_user_id = ctx.author.id
-    database_discord_user = dbqueries.single_req("SELECT * FROM members WHERE discord_id = '{0}'".format(discord_user_id))
+    database_discord_user = pe_database.query_single(f"SELECT * FROM members WHERE discord_id = '{discord_user_id}';")
+    # database_discord_user = dbqueries.single_req("SELECT * FROM members WHERE discord_id = '{0}'".format(discord_user_id))
 
-    if len(database_discord_user.keys()) == 0:
+    if len(database_discord_user) == 0:
         return await ctx.respond("Your discord account isn't linked to any profile")
 
-    temp_query = "UPDATE members SET discord_id = '' WHERE discord_id = '{0}'".format(discord_user_id)
-    dbqueries.single_req(temp_query)
+    temp_query = f"UPDATE members SET discord_id = '' WHERE discord_id = '{discord_user_id}';"
+    # dbqueries.single_req(temp_query)
+    pe_database.query_single(temp_query)
 
     return await ctx.respond("Your discord account was unlinked to the project euler `{0}` account".format(database_discord_user[0]["username"]))
 
@@ -706,7 +727,7 @@ async def command_randproblem(ctx, member: discord.User):
 
     discord_id = member.id
 
-    m = pe_api.Member(_discord_id = discord_id)
+    m = pe_api.Member(_discord_id = str(discord_id))
     if not m.is_discord_linked():
         return await ctx.respond("This user does not have a project euler account linked! Please link with /link first")
     
@@ -786,9 +807,9 @@ async def commmand_grid(ctx, member: discord.User):
         return await ctx.respond("This user has a private profile.")
 
     solves = []
-    for id, b in enumerate(m.solve_array()):
-        if b == True:
-            solves.append(id + 1)
+    for index, boolean in enumerate(m.solve_array()):
+        if boolean:
+            solves.append(index + 1)
 
     grid_image = pe_image.project_euler_grid(solves)
     
@@ -981,7 +1002,7 @@ async def command_awards_requirements(ctx, award: str, member: discord.User = No
         solves_needed = 50
 
     if award == "Trinary Triumph":
-        valid_problems = [1, 3, 9, 27, 81, 243]
+        valid_problems = [1, 3, 9, 27, 81, 243, 729]
         solves_needed = len(valid_problems)
 
     if award == "Fibonacci Fever":

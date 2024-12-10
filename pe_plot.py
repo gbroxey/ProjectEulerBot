@@ -49,7 +49,7 @@ def graph_solves(day_counts: int, local: bool, smoothing = 1):
 
     if local is True:
 
-        data = pe_api.get_solves_in_database(day_counts)
+        data = pe_api.get_solves_in_database()
         data_len = day_counts + 1
 
         current_day = datetime.datetime.now(pytz.utc)
@@ -57,17 +57,28 @@ def graph_solves(day_counts: int, local: bool, smoothing = 1):
 
         counts = {day: 0 for day in days_list}
 
-        for i in data.keys():
-            day_as_key = datetime.datetime.strptime(data[i]["solve_date"].split()[0], database_format).strftime(output_format)
-            counts[day_as_key] += 1
+        for element in data:
+            day_as_key = datetime.datetime.strptime(element["solve_date"].split()[0], database_format).strftime(output_format)
+            if day_as_key in counts:
+                counts[day_as_key] += 1
 
     else:
 
-        data = pe_api.get_global_solves_in_database(day_counts)
-        data_len = len(data)
+        data: list = pe_api.get_global_solves_in_database()
+        minimum_day = datetime.datetime.now(pytz.utc) - datetime.timedelta(days=day_counts)
 
-        days_list = [data[x]["DATE(date_stat)"] for x in data.keys()]
-        counts = {data[x]["DATE(date_stat)"]: data[x]["solves"] for x in data.keys()}
+        filtered_data = []
+
+        for element in data:
+            
+            d = datetime.datetime.strptime(element["date_stat"], "%Y-%m-%d %H:%M:%S")
+            if d >= minimum_day:
+                filtered_data.append({"date_stat": element["date_stat"], "solves": element["solves"]}) 
+
+        data_len = len(filtered_data)
+
+        days_list = [element["date_stat"] for element in filtered_data]
+        counts = {element["date_stat"]: element["solves"] for element in filtered_data}
         
 
     data_df = {"DATE": days_list, "SOLVES": list(counts.values())}
