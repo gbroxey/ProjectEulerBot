@@ -20,11 +20,17 @@ def setup_database_keys():
     global credentials_server
 
     # setup mysql key found in private file
-    with open(MYSQL_KEYFILE) as f:
-        key = list(map(lambda x: x.replace("\n", "").replace("\r", ""), f.readlines()))
+    with open("keys.json", "r") as f:
+        keys = json.load(f)
 
-    credentials_server["password"] = key[0]
-    credentials_server["host"] = key[1]
+    credentials_server["password"] = keys["database"]["password"]
+    credentials_server["host"] = keys["database"]["host"]
+
+    # with open(MYSQL_KEYFILE) as f:
+    #     key = list(map(lambda x: x.replace("\n", "").replace("\r", ""), f.readlines()))
+
+    # credentials_server["password"] = key[0]
+    # credentials_server["host"] = key[1]
 
 
 

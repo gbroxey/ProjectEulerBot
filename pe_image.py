@@ -211,7 +211,7 @@ def add_watermark(image):
 
 
 
-def image_for_timestamp_user_solve(data: list, timestamp: float, username: str, frame: int, total_frame: int, last_pb: int):
+def image_for_timestamp_user_solve(data: list, timestamp: float, username: str, frame: int, total_frame: int, frame_to_write: int, last_pb: int):
 
     dimensions = (600, 470)
     
@@ -229,7 +229,7 @@ def image_for_timestamp_user_solve(data: list, timestamp: float, username: str, 
     draw.rectangle(((3*100 + 6*10, 20), (3*100 + 6*10 + 20, dimensions[1] - 20)))
 
     text_adder(image, "Time", (255, 255, 255), (390, 20), 15)
-    draw.rectangle(((360+1, 20+1), (380-1, 20 + (dimensions[1] - 40) * frame / total_frame - 1)), (170, 170, 170))
+    draw.rectangle(((360+1, 20+1), (380-1, 20 + (dimensions[1] - 40) * (max(frame, 1)) / total_frame - 1)), (170, 170, 170))
 
     current_date = datetime.datetime.fromtimestamp(timestamp)
     text_adder(image, datetime.datetime.strftime(current_date, "%Y-%m-%d"), (255, 255, 255), (390, 40), 13)
@@ -240,8 +240,9 @@ def image_for_timestamp_user_solve(data: list, timestamp: float, username: str, 
     add_solve_count(image, solves_at_this_point)
 
     text_adder(image, username, (255, 255, 255), (390, 70), 25)
+    text_adder(image, "Frame {0}".format(len(os.listdir(f"graphs/{username}/"))), (255, 255, 255), (390, 100), 10)
 
-    image_path = f"graphs/{username}/frame{frame}.png"
+    image_path = f"graphs/{username}/frame{frame_to_write}.png"
     image.save(image_path)
 
     return image_path
@@ -259,8 +260,6 @@ def concatenate_image_gif(username: str):
     for image in images:
         img = Image.open(image)
         gif.append(img.convert("P", palette=Image.ADAPTIVE))
-    
-    print(len(gif))
 
     gif[0].save(save_path, save_all=True, optimize=False, append_images=gif[1:], disposal=2, loop=0, transparency=True)
 
@@ -268,7 +267,7 @@ def concatenate_image_gif(username: str):
 
 def project_euler_grid(cells_to_fill: list) -> str:
 
-    dimensions = (360, 360)
+    dimensions = (360, 470)
 
     img = Image.new("RGB", dimensions)
     draw = ImageDraw.Draw(img, "RGB")

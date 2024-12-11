@@ -2,6 +2,9 @@ import discord
 import asyncio
 import pe_discord_api
 import pe_api
+import math
+
+from discord.ext.pages import Page, PaginatorButton, Paginator
 
 INTER_ROLES_SLEEP = 0.7
 
@@ -90,11 +93,11 @@ class Dropdown(discord.ui.Select):
                 await self.author.remove_roles(role)
                 await asyncio.sleep(INTER_ROLES_SLEEP)
 
-        resps = ", ".join(sorted(self.values))
-        print(f"User {self.author.name} updated roles to {resps}")
+        response = ", ".join(sorted(self.values))
+        print(f"User {self.author.name} updated roles to {response}")
 
         await interaction.followup.send(
-            f"Roles updated to {resps}",
+            f"Roles updated to {response}",
             ephemeral=True
         )
 
@@ -122,7 +125,7 @@ def problem_thread_view(problem_number: int):
     async def button_callback(interaction: discord.Interaction):
         
         await interaction.response.defer()
-        
+
         allowed_members = pe_api.get_all_discord_profiles_who_solved(problem=problem_number)
         allowed_discord_ids = list(map(lambda element: int(element[1]), allowed_members))
 
@@ -131,8 +134,8 @@ def problem_thread_view(problem_number: int):
             return await interaction.followup.send("Sorry, you did not solve problem #{0}. If you did solve it, please link your account first".format(problem_number), ephemeral=True)
             
         # Otherwise, iterate through available threads, and when the name matches, add the user to the list of participants
-        availabe_threads = await pe_discord_api.get_available_threads(interaction.guild.id, interaction.channel.id) 
-        for th in availabe_threads:
+        available_threads = await pe_discord_api.get_available_threads(interaction.guild.id, interaction.channel.id)
+        for th in available_threads:
             
             if th.name == pe_discord_api.THREAD_DEFAULT_NAME_FORMAT.format(problem_number):
                 
@@ -149,3 +152,59 @@ def problem_thread_view(problem_number: int):
     view = discord.ui.View(timeout=None)
     view.add_item(button)
     return view
+
+
+async def leaderboard_page(ctx, leaderboard_data: list, with_emojis: bool, descending: bool, count_per_page: int):
+
+    """
+    Leaderboard data must be of the kind `[(username1, score1), ...]`
+    """
+
+    leaderboard_data = list(sorted(leaderboard_data, key=lambda x: x[1], reverse=descending))
+    pages = (len(leaderboard_data) + (count_per_page - 1)) // count_per_page
+
+    my_pages = []
+
+    for page in range(1, pages + 1):
+
+        embed = discord.Embed(
+            title=f"Page #{page} of the leaderboard",
+            color=discord.Colour.blurple()
+        )
+
+        bottom = count_per_page * (page - 1) + 1
+        top = count_per_page * page
+
+        field_value = ""
+        for index in range(bottom, top + 1):
+
+            if index > len(leaderboard_data):
+                break
+
+            ex_aequo_index = index
+            while ex_aequo_index >= 2 and leaderboard_data[ex_aequo_index - 2][1] == leaderboard_data[index - 1][1]:
+                ex_aequo_index -= 1
+
+            prefix = f"{ex_aequo_index})"
+            if ex_aequo_index <= 3 and with_emojis:
+                prefix = ["🥇", "🥈", "🥉"][ex_aequo_index - 1]
+
+            username, used_score = leaderboard_data[index - 1]
+            field_value += f"{prefix} {username}  ―  (*{used_score}*)\n"
+
+        embed.add_field(
+            name="", 
+            value=field_value
+        )
+
+        my_pages.append(Page(content="", embeds=[embed])    )
+    
+    buttons = [
+        PaginatorButton("prev", label="←", style=discord.ButtonStyle.green),
+        PaginatorButton("page_indicator", style=discord.ButtonStyle.gray, disabled=True),
+        PaginatorButton("next", label="→", style=discord.ButtonStyle.green)
+    ]
+
+    paginator = Paginator(pages=my_pages, use_default_buttons=False, custom_buttons=buttons)
+
+    await paginator.respond(interaction=ctx.interaction)

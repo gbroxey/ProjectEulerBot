@@ -1,0 +1,811 @@
+{
+    "easy": {
+        "last_timestamp": "1725112259",
+        "current_problem": "673"
+    },
+    "medium": {
+        "last_timestamp": "1724991247",
+        "current_problem": "194"
+    },
+    "hard": {
+        "last_timestamp": "1724968676",
+        "current_problem": "851"
+    },
+    "solves": {
+        "731": {
+            "solver_username": "DottedCalculator",
+            "timestamp_announced": "1722531715",
+            "timestamp_solved": "1722532484"
+        },
+        "786": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722531715",
+            "timestamp_solved": "1722702788"
+        },
+        "686": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1722532485",
+            "timestamp_solved": "1722534688"
+        },
+        "379": {
+            "solver_username": "Patryqss",
+            "timestamp_announced": "1722534689",
+            "timestamp_solved": "1722541979"
+        },
+        "738": {
+            "solver_username": "shcarecrow",
+            "timestamp_announced": "1722536277",
+            "timestamp_solved": "1722541406"
+        },
+        "638": {
+            "solver_username": "Meeperbunny",
+            "timestamp_announced": "1722541414",
+            "timestamp_solved": "1722553632"
+        },
+        "139": {
+            "solver_username": "soulgazer",
+            "timestamp_announced": "1722541980",
+            "timestamp_solved": "1722550606"
+        },
+        "445": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722550607",
+            "timestamp_solved": "1722581085"
+        },
+        "98": {
+            "solver_username": "Yibbon2017",
+            "timestamp_announced": "1722553634",
+            "timestamp_solved": "1722595780"
+        },
+        "130": {
+            "solver_username": "Meyzel",
+            "timestamp_announced": "1722581087",
+            "timestamp_solved": "1722603701"
+        },
+        "431": {
+            "solver_username": "MarCFF",
+            "timestamp_announced": "1722595782",
+            "timestamp_solved": "1722604264"
+        },
+        "253": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722603702",
+            "timestamp_solved": "1722610347"
+        },
+        "43": {
+            "solver_username": "mt13354",
+            "timestamp_announced": "1722604266",
+            "timestamp_solved": "1722607376"
+        },
+        "277": {
+            "solver_username": "mt13354",
+            "timestamp_announced": "1722607378",
+            "timestamp_solved": "1722630842"
+        },
+        "685": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722610348",
+            "timestamp_solved": "1722618195"
+        },
+        "801": {
+            "solver_username": "None",
+            "timestamp_announced": "1722618196",
+            "timestamp_solved": "-1"
+        },
+        "756": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722630843",
+            "timestamp_solved": "1722661764"
+        },
+        "787": {
+            "solver_username": "slfotg",
+            "timestamp_announced": "1722661765",
+            "timestamp_solved": "1722700152"
+        },
+        "349": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1722700154",
+            "timestamp_solved": "1722700988"
+        },
+        "705": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722700990",
+            "timestamp_solved": "1722702978"
+        },
+        "847": {
+            "solver_username": "None",
+            "timestamp_announced": "1722702790",
+            "timestamp_solved": "-1"
+        },
+        "430": {
+            "solver_username": "None",
+            "timestamp_announced": "1722702980",
+            "timestamp_solved": "-1"
+        },
+        "778": {
+            "solver_username": "MarCFF",
+            "timestamp_announced": "1722795073",
+            "timestamp_solved": "1722799446"
+        },
+        "382": {
+            "solver_username": "MarCFF",
+            "timestamp_announced": "1722795074",
+            "timestamp_solved": "1722805446"
+        },
+        "488": {
+            "solver_username": "shcarecrow",
+            "timestamp_announced": "1722795074",
+            "timestamp_solved": "1722795548"
+        },
+        "594": {
+            "solver_username": "MarCFF",
+            "timestamp_announced": "1722795550",
+            "timestamp_solved": "1722814319"
+        },
+        "493": {
+            "solver_username": "DottedCalculator",
+            "timestamp_announced": "1722799448",
+            "timestamp_solved": "1722801985"
+        },
+        "609": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1722801986",
+            "timestamp_solved": "1722828577"
+        },
+        "185": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1722805448",
+            "timestamp_solved": "1722831899"
+        },
+        "812": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722814321",
+            "timestamp_solved": "1722875021"
+        },
+        "748": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1722828578",
+            "timestamp_solved": "1722839858"
+        },
+        "175": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1722831901",
+            "timestamp_solved": "1722837570"
+        },
+        "652": {
+            "solver_username": "MarCFF",
+            "timestamp_announced": "1722837572",
+            "timestamp_solved": "1722889772"
+        },
+        "800": {
+            "solver_username": "Guest_6414",
+            "timestamp_announced": "1722839860",
+            "timestamp_solved": "1722875019"
+        },
+        "80": {
+            "solver_username": "None",
+            "timestamp_announced": "1722875021",
+            "timestamp_solved": "-1"
+        },
+        "439": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722875022",
+            "timestamp_solved": "1722895139"
+        },
+        "414": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722889774",
+            "timestamp_solved": "1722914302"
+        },
+        "482": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722895141",
+            "timestamp_solved": "1722949636"
+        },
+        "520": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1722914305",
+            "timestamp_solved": "1722923119"
+        },
+        "230": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1722923121",
+            "timestamp_solved": "1723033408"
+        },
+        "505": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722949638",
+            "timestamp_solved": "1722975444"
+        },
+        "84": {
+            "solver_username": "None",
+            "timestamp_announced": "1722954243",
+            "timestamp_solved": "-1"
+        },
+        "289": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1722975445",
+            "timestamp_solved": "1723005618"
+        },
+        "780": {
+            "solver_username": "Guest_6414",
+            "timestamp_announced": "1723005619",
+            "timestamp_solved": "1723041259"
+        },
+        "399": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723033410",
+            "timestamp_solved": "1723061533"
+        },
+        "371": {
+            "solver_username": "Guest_6414",
+            "timestamp_announced": "1723033473",
+            "timestamp_solved": "1723043299"
+        },
+        "644": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1723041260",
+            "timestamp_solved": "1723058188"
+        },
+        "265": {
+            "solver_username": "None",
+            "timestamp_announced": "1723043301",
+            "timestamp_solved": "-1"
+        },
+        "246": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723058189",
+            "timestamp_solved": "1723064879"
+        },
+        "168": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723061536",
+            "timestamp_solved": "1723066245"
+        },
+        "824": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723064881",
+            "timestamp_solved": "1723277683"
+        },
+        "248": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723066247",
+            "timestamp_solved": "1723072543"
+        },
+        "393": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723072544",
+            "timestamp_solved": "1723074512"
+        },
+        "157": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723074513",
+            "timestamp_solved": "1723076974"
+        },
+        "213": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723076975",
+            "timestamp_solved": "1723077839"
+        },
+        "308": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723077840",
+            "timestamp_solved": "1723106105"
+        },
+        "280": {
+            "solver_username": "falsidge",
+            "timestamp_announced": "1723106107",
+            "timestamp_solved": "1723114757"
+        },
+        "422": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723114758",
+            "timestamp_solved": "1723152935"
+        },
+        "504": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1723122526",
+            "timestamp_solved": "1723130745"
+        },
+        "885": {
+            "solver_username": "Teyzer18",
+            "timestamp_announced": "1723130747",
+            "timestamp_solved": "1723170871"
+        },
+        "467": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723152936",
+            "timestamp_solved": "1723165224"
+        },
+        "859": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723165226",
+            "timestamp_solved": "1723174265"
+        },
+        "45": {
+            "solver_username": "None",
+            "timestamp_announced": "1723170873",
+            "timestamp_solved": "-1"
+        },
+        "882": {
+            "solver_username": "falsidge",
+            "timestamp_announced": "1723174267",
+            "timestamp_solved": "1723285033"
+        },
+        "52": {
+            "solver_username": "mt13354",
+            "timestamp_announced": "1723250076",
+            "timestamp_solved": "1723253770"
+        },
+        "12": {
+            "solver_username": "None",
+            "timestamp_announced": "1723253772",
+            "timestamp_solved": "-1"
+        },
+        "514": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1723277685",
+            "timestamp_solved": "1723294626"
+        },
+        "353": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1723285035",
+            "timestamp_solved": "1723377058"
+        },
+        "328": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1723294627",
+            "timestamp_solved": "1723392169"
+        },
+        "718": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723333020",
+            "timestamp_solved": "1723350091"
+        },
+        "425": {
+            "solver_username": "ifndef_HPP_",
+            "timestamp_announced": "1723350094",
+            "timestamp_solved": "1723352507"
+        },
+        "82": {
+            "solver_username": "soulgazer",
+            "timestamp_announced": "1723352508",
+            "timestamp_solved": "1723356942"
+        },
+        "828": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723356944",
+            "timestamp_solved": "1723378172"
+        },
+        "524": {
+            "solver_username": "None",
+            "timestamp_announced": "1723377059",
+            "timestamp_solved": "-1"
+        },
+        "497": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723378173",
+            "timestamp_solved": "1723381882"
+        },
+        "600": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723381883",
+            "timestamp_solved": "1723383735"
+        },
+        "621": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723383736",
+            "timestamp_solved": "1723406877"
+        },
+        "636": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723392173",
+            "timestamp_solved": "1723607695"
+        },
+        "646": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723406879",
+            "timestamp_solved": "1723437634"
+        },
+        "518": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723437636",
+            "timestamp_solved": "1723439234"
+        },
+        "449": {
+            "solver_username": "falsidge",
+            "timestamp_announced": "1723439237",
+            "timestamp_solved": "1723441960"
+        },
+        "323": {
+            "solver_username": "None",
+            "timestamp_announced": "1723441962",
+            "timestamp_solved": "-1"
+        },
+        "96": {
+            "solver_username": "None",
+            "timestamp_announced": "1723521176",
+            "timestamp_solved": "-1"
+        },
+        "599": {
+            "solver_username": "icy001",
+            "timestamp_announced": "1723542697",
+            "timestamp_solved": "1723554139"
+        },
+        "511": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723554141",
+            "timestamp_solved": "1723568056"
+        },
+        "352": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723568058",
+            "timestamp_solved": "1723570342"
+        },
+        "337": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723570343",
+            "timestamp_solved": "1723574116"
+        },
+        "890": {
+            "solver_username": "None",
+            "timestamp_announced": "1723574118",
+            "timestamp_solved": "-1"
+        },
+        "89": {
+            "solver_username": "None",
+            "timestamp_announced": "1723600419",
+            "timestamp_solved": "-1"
+        },
+        "269": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723607697",
+            "timestamp_solved": "1723670659"
+        },
+        "546": {
+            "solver_username": "slfotg",
+            "timestamp_announced": "1723670661",
+            "timestamp_solved": "1723730228"
+        },
+        "407": {
+            "solver_username": "soulgazer",
+            "timestamp_announced": "1723679637",
+            "timestamp_solved": "1723684745"
+        },
+        "107": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723684748",
+            "timestamp_solved": "1723685274"
+        },
+        "679": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1723685276",
+            "timestamp_solved": "1723713446"
+        },
+        "516": {
+            "solver_username": "None",
+            "timestamp_announced": "1723713447",
+            "timestamp_solved": "-1"
+        },
+        "331": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723730229",
+            "timestamp_solved": "1723785332"
+        },
+        "707": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723739755",
+            "timestamp_solved": "1723766194"
+        },
+        "406": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723766196",
+            "timestamp_solved": "1723840624"
+        },
+        "792": {
+            "solver_username": "None",
+            "timestamp_announced": "1723785334",
+            "timestamp_solved": "-1"
+        },
+        "692": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723792676",
+            "timestamp_solved": "1723796333"
+        },
+        "510": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723796335",
+            "timestamp_solved": "1723834248"
+        },
+        "104": {
+            "solver_username": "None",
+            "timestamp_announced": "1723834250",
+            "timestamp_solved": "-1"
+        },
+        "141": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723840626",
+            "timestamp_solved": "1723843756"
+        },
+        "322": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723843758",
+            "timestamp_solved": "1723868494"
+        },
+        "260": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723868495",
+            "timestamp_solved": "1723881484"
+        },
+        "151": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723881487",
+            "timestamp_solved": "1723881918"
+        },
+        "129": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723881920",
+            "timestamp_solved": "1723883216"
+        },
+        "619": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723883218",
+            "timestamp_solved": "1723883838"
+        },
+        "176": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1723883840",
+            "timestamp_solved": "1723887968"
+        },
+        "171": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723887969",
+            "timestamp_solved": "1723937924"
+        },
+        "374": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723913457",
+            "timestamp_solved": "1723918217"
+        },
+        "662": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1723918222",
+            "timestamp_solved": "1723996115"
+        },
+        "444": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1723937926",
+            "timestamp_solved": "1723968102"
+        },
+        "569": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1723968104",
+            "timestamp_solved": "1723989937"
+        },
+        "629": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1723989939",
+            "timestamp_solved": "1724084321"
+        },
+        "4": {
+            "solver_username": "None",
+            "timestamp_announced": "1723996117",
+            "timestamp_solved": "-1"
+        },
+        "620": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724037357",
+            "timestamp_solved": "1724212551"
+        },
+        "845": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1724075377",
+            "timestamp_solved": "1724081639"
+        },
+        "587": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724081641",
+            "timestamp_solved": "1724109160"
+        },
+        "827": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724084323",
+            "timestamp_solved": "1724112427"
+        },
+        "732": {
+            "solver_username": "None",
+            "timestamp_announced": "1724109162",
+            "timestamp_solved": "-1"
+        },
+        "492": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724112429",
+            "timestamp_solved": "1724195114"
+        },
+        "68": {
+            "solver_username": "None",
+            "timestamp_announced": "1724188376",
+            "timestamp_solved": "-1"
+        },
+        "614": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1724195115",
+            "timestamp_solved": "1724356153"
+        },
+        "667": {
+            "solver_username": "None",
+            "timestamp_announced": "1724212552",
+            "timestamp_solved": "-1"
+        },
+        "694": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724267582",
+            "timestamp_solved": "1724273553"
+        },
+        "203": {
+            "solver_username": "ifndef_HPP_",
+            "timestamp_announced": "1724273555",
+            "timestamp_solved": "1724308582"
+        },
+        "878": {
+            "solver_username": "falsidge",
+            "timestamp_announced": "1724308585",
+            "timestamp_solved": "1724365690"
+        },
+        "369": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724356154",
+            "timestamp_solved": "1724460387"
+        },
+        "660": {
+            "solver_username": "shcarecrow",
+            "timestamp_announced": "1724365692",
+            "timestamp_solved": "1724394638"
+        },
+        "122": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724394639",
+            "timestamp_solved": "1724408738"
+        },
+        "41": {
+            "solver_username": "G3NUIN3",
+            "timestamp_announced": "1724408740",
+            "timestamp_solved": "1724434805"
+        },
+        "27": {
+            "solver_username": "None",
+            "timestamp_announced": "1724434808",
+            "timestamp_solved": "-1"
+        },
+        "292": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724460388",
+            "timestamp_solved": "1724464694"
+        },
+        "591": {
+            "solver_username": "None",
+            "timestamp_announced": "1724464569",
+            "timestamp_solved": "-1"
+        },
+        "680": {
+            "solver_username": "None",
+            "timestamp_announced": "1724464696",
+            "timestamp_solved": "-1"
+        },
+        "612": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1724514010",
+            "timestamp_solved": "1724523631"
+        },
+        "698": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724523633",
+            "timestamp_solved": "1724549475"
+        },
+        "50": {
+            "solver_username": "None",
+            "timestamp_announced": "1724549476",
+            "timestamp_solved": "-1"
+        },
+        "358": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724628679",
+            "timestamp_solved": "1724643876"
+        },
+        "567": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1724630350",
+            "timestamp_solved": "1724697778"
+        },
+        "527": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1724643877",
+            "timestamp_solved": "1724678117"
+        },
+        "57": {
+            "solver_username": "None",
+            "timestamp_announced": "1724678119",
+            "timestamp_solved": "-1"
+        },
+        "400": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724697779",
+            "timestamp_solved": "1724760185"
+        },
+        "608": {
+            "solver_username": "None",
+            "timestamp_announced": "1724716627",
+            "timestamp_solved": "-1"
+        },
+        "862": {
+            "solver_username": "baptistecollet",
+            "timestamp_announced": "1724757338",
+            "timestamp_solved": "1724764703"
+        },
+        "735": {
+            "solver_username": "None",
+            "timestamp_announced": "1724760186",
+            "timestamp_solved": "-1"
+        },
+        "886": {
+            "solver_username": "None",
+            "timestamp_announced": "1724764705",
+            "timestamp_solved": "-1"
+        },
+        "872": {
+            "solver_username": "None",
+            "timestamp_announced": "1724843943",
+            "timestamp_solved": "-1"
+        },
+        "537": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1724923147",
+            "timestamp_solved": "1724936556"
+        },
+        "233": {
+            "solver_username": "ddpigeon",
+            "timestamp_announced": "1724925804",
+            "timestamp_solved": "1724991246"
+        },
+        "458": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1724936558",
+            "timestamp_solved": "1724956323"
+        },
+        "601": {
+            "solver_username": "jy314",
+            "timestamp_announced": "1724956325",
+            "timestamp_solved": "1724966576"
+        },
+        "359": {
+            "solver_username": "Solarion4131",
+            "timestamp_announced": "1724966578",
+            "timestamp_solved": "1725013655"
+        },
+        "851": {
+            "solver_username": "None",
+            "timestamp_announced": "1724968676",
+            "timestamp_solved": "-1"
+        },
+        "194": {
+            "solver_username": "None",
+            "timestamp_announced": "1724991247",
+            "timestamp_solved": "-1"
+        },
+        "479": {
+            "solver_username": "__LW__",
+            "timestamp_announced": "1725013656",
+            "timestamp_solved": "1725033035"
+        },
+        "336": {
+            "solver_username": "None",
+            "timestamp_announced": "1725033037",
+            "timestamp_solved": "-1"
+        },
+        "673": {
+            "solver_username": "None",
+            "timestamp_announced": "1725112259",
+            "timestamp_solved": "-1"
+        }
+    }
+}

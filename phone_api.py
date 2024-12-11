@@ -17,3 +17,12 @@ def bot_success(success):
 
     resp = requests.get(url)
     return resp.status_code == 200
+
+
+def bot_info(message):
+
+    url = "https://api.pushcut.io/YhAwjYaEHSWa1Xv109_Km/notifications/EulerBot%20Notification?text={0}"
+    url = url.format(message)
+
+    resp = requests.get(url)
+    return resp.status_code == 200
