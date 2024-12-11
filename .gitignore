@@ -134,6 +134,7 @@ session_cookies.txt
 database_key.txt
 databases/authentic.db
 profiles/authentic.json
+profiles/test.json
 
 # output files
 nohup.out
