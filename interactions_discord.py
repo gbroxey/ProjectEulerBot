@@ -93,11 +93,11 @@ class Dropdown(discord.ui.Select):
                 await self.author.remove_roles(role)
                 await asyncio.sleep(INTER_ROLES_SLEEP)
 
-        resps = ", ".join(sorted(self.values))
-        print(f"User {self.author.name} updated roles to {resps}")
+        response = ", ".join(sorted(self.values))
+        print(f"User {self.author.name} updated roles to {response}")
 
         await interaction.followup.send(
-            f"Roles updated to {resps}",
+            f"Roles updated to {response}",
             ephemeral=True
         )
 
@@ -125,7 +125,7 @@ def problem_thread_view(problem_number: int):
     async def button_callback(interaction: discord.Interaction):
         
         await interaction.response.defer()
-        
+
         allowed_members = pe_api.get_all_discord_profiles_who_solved(problem=problem_number)
         allowed_discord_ids = list(map(lambda element: int(element[1]), allowed_members))
 
@@ -134,8 +134,8 @@ def problem_thread_view(problem_number: int):
             return await interaction.followup.send("Sorry, you did not solve problem #{0}. If you did solve it, please link your account first".format(problem_number), ephemeral=True)
             
         # Otherwise, iterate through available threads, and when the name matches, add the user to the list of participants
-        availabe_threads = await pe_discord_api.get_available_threads(interaction.guild.id, interaction.channel.id) 
-        for th in availabe_threads:
+        available_threads = await pe_discord_api.get_available_threads(interaction.guild.id, interaction.channel.id)
+        for th in available_threads:
             
             if th.name == pe_discord_api.THREAD_DEFAULT_NAME_FORMAT.format(problem_number):
                 

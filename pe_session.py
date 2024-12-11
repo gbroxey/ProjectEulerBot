@@ -38,7 +38,7 @@ def solve(image_name: str, human: bool = False):
         return input("Human CAPTCHA: ")
     
     solver = imagecaptcha()
-    solver.set_key("a031b781f7ef39929a12ac0be49d728a")
+    solver.set_key("AAAA")
     captcha_text = solver.solve_and_return_solution(image_name)
 
     phone_api.bot_info("Consumed a CAPTCHA token")

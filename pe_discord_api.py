@@ -275,7 +275,7 @@ async def command_hello(ctx):
     data = await major_update()
 
     if data in [False, None]:
-        await ctx.respond("An error occured during the fetch, this may need human checkup. Use /status to get more details.")
+        await ctx.respond("An error occurred during the fetch, this may need human checkup. Use /status to get more details.")
     else:
         await ctx.respond("The data was updated!")
 
@@ -284,7 +284,7 @@ async def command_hello(ctx):
 async def command_status(ctx):
     
     text_response = "The last fetch of data was `{0}`. The last successful fetch was made on `{1}`.\n"
-    text_response += "Since the last restart of the bot (`{4}`), there was `{2}` successfuls requests, over `{3}` in total.\n"
+    text_response += "Since the last restart of the bot (`{4}`), there was `{2}` successful requests, over `{3}` in total.\n"
     text_response += "(And `{5}` queries to the database).\n"
     text_response += "Website status from my computer: `{6}`. Session of the bot status: `{7}`"
 
@@ -322,10 +322,10 @@ async def command_profile(ctx, member: discord.User):
 
     try:
         profile_url = member.avatar.url
-    except:
+    finally:
         pass
 
-    m = pe_api.Member(_discord_id = discord_id)
+    m = pe_api.Member(_discord_id = str(discord_id))
 
     if not m.is_discord_linked():
         return await ctx.respond("This user is not linked! Please link your account first")
@@ -359,12 +359,10 @@ async def command_link(ctx, username: str):
 
     discord_user_id = ctx.author.id
     database_discord_user = pe_database.query_single(f"SELECT * FROM members WHERE discord_id = '{discord_user_id}';")
-    # database_discord_user = dbqueries.single_req("SELECT * FROM members WHERE discord_id = '{0}'".format(discord_user_id))
     if len(database_discord_user) > 0:
         sentence = f"Your discord account is already linked to the account `{database_discord_user[0]['username']}`, type /unlink to unlink it"
         return await ctx.respond(sentence)
 
-    # user = dbqueries.single_req("SELECT * FROM members WHERE username = '{0}'".format(username))
     users = pe_database.query_single(f"SELECT * FROM members WHERE username = '{username}';")
     if len(users) == 0:
         return await ctx.respond("This username is not in my friend list. Add the bot account on project euler first: 1910895_2C6CP6OuYKOwNlTdL8A5fXZ0p5Y41CZc\nThen ensure your account is not unlisted.\nIf you think this is a mistake, send a DM to <@439143335932854272>.")
@@ -374,7 +372,6 @@ async def command_link(ctx, username: str):
         return await ctx.respond(f"This account is already linked to <@{user['discord_id']}>")
 
     temp_query = f"UPDATE members SET discord_id = '{discord_user_id}' WHERE username = '{username}'"
-    # dbqueries.single_req(temp_query)
     pe_database.query_single(temp_query)
 
     m = pe_api.Member(_username = username)
@@ -416,17 +413,17 @@ async def command_kudos(ctx, member: discord.User):
     if m.private() and m.discord_id() != str(ctx.author.id):
         return await ctx.respond("This user has a private profile.")
 
-    nkudos = m.get_new_kudos()
+    new_kudos = m.get_new_kudos()
     m.push_kudo_to_database()
     
     kudo_count = m.kudo_count()
     
-    change = sum([el[1] for el in nkudos])
+    change = sum([el[1] for el in new_kudos])
 
     if change == 0:
         return await ctx.respond("No change for user `{0}`, still {1} kudos (Always displayed when first using the command)".format(m.username_option(), kudo_count))
     else:
-        k = "```" + "\n".join(list(map(lambda x: ": ".join(list(map(str, x))), nkudos))) + "```"
+        k = "```" + "\n".join(list(map(lambda x: ": ".join(list(map(str, x))), new_kudos))) + "```"
         return await ctx.respond("There was some change for user `{0}`! You gained {1} kudos on the following posts (for a total of {2} kudos):".format(m.username_option(), change, kudo_count) + k)
 
 

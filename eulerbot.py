@@ -1,7 +1,6 @@
 import pe_api
 import pe_discord_api
 import pe_database
-# import dbqueries
 
 from rich.console import Console
 
